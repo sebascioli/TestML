@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#6200EE</color>
+    <color name="colorPrimaryDark">#3700B3</color>
+    <color name="colorAccent">#03DAC5</color>
+    <color name="yellowML">#fad000</color>
+    <color name="yellowLemon">#effd5f</color>
+    <color name="yellowButter">#fee227</color>
+    <color name="yellowCanary">#f9c802</color>
+    <color name="yellowMustard">#e8b828</color>
+    <color name="yellowFlaxen">#d6b75a</color>
+</resources>

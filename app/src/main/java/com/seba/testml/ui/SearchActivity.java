@@ -1,19 +1,125 @@
 package com.seba.testml.ui;
 
+import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.KeyEvent;
+import android.view.MotionEvent;
+import android.view.View;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.seba.testml.R;
+import com.seba.testml.databinding.ActivitySearchBinding;
+import com.seba.testml.srv.RestAPI;
+import com.seba.testml.srv.RestSrv;
+import com.seba.testml.srv.dto.Product;
+import com.seba.testml.srv.dto.QueryModel;
+import com.seba.testml.utils.Utils;
 
-public class SearchActivity extends BaseActivity {
+import java.util.ArrayList;
 
-    private static final int SPLASH_TIME = 2500; // ms
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
+import static com.seba.testml.srv.dto.Product.KEY_PRODUCT;
+import static java.net.HttpURLConnection.HTTP_OK;
+
+public class SearchActivity extends BaseActivity implements QueryAdapter.OnProductListener {
+
+    private static final int HTTP_TIMEOUT = 10; // s
+    private static final int SPLASH_TIME = 1000; // ms
+    private static final String URL_BASE = "https://api.mercadolibre.com";
+    private static final String ID_SITE = "MLA";
+    private ActivitySearchBinding bind;
+    private LinearLayoutManager layoutMgr;
+    private QueryAdapter queryAdapter;
+    private RestAPI restAPI;
+    private String query;
+    private boolean isLoading = true;
+    private int offset = 0, limit = 50, totalFound = -1;
+    private int pastVisibleItems, visibleItemCount, totalItemCount, previousTotal = 0;
+    private int viewThreshold = 0;
 
     @Override
+    @SuppressLint("ClickableViewAccessibility")
     protected void onCreate(Bundle savedInstanceState) {
         keepSplash();
         setTheme(R.style.AppTheme);
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_search);
+
+        bind = ActivitySearchBinding.inflate(getLayoutInflater());
+        setContentView(bind.getRoot());
+
+        layoutMgr = new LinearLayoutManager(this);
+
+        bind.queryRV.setHasFixedSize(true);
+        bind.queryRV.setLayoutManager(layoutMgr);
+
+        bind.queryTIET.setOnKeyListener((view, keyCode, keyEvent) -> {
+            if ((keyEvent.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER)) {
+                String queryNew = bind.queryTIET.getText().toString();
+                Toast.makeText(SearchActivity.this, queryNew, Toast.LENGTH_SHORT).show();
+                if (!queryNew.equals(query)) {
+                    query = queryNew;
+                    clearScreen();
+                    getQueryResponse();
+                }
+                return true;
+            }
+            return false;
+        });
+
+        bind.queryTIET.setOnTouchListener((view, motionEvent) -> {
+            final int DRAWABLE_LEFT = 0, DRAWABLE_TOP = 1, DRAWABLE_RIGHT = 2, DRAWABLE_BOTTOM = 3;
+            if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
+                if (motionEvent.getRawX() >= (bind.queryTIET.getRight() - bind.queryTIET.getCompoundDrawables()[DRAWABLE_RIGHT].getBounds().width())) {
+                    bind.queryTIET.getText().clear();
+                    query = "";
+                    clearScreen();
+                    return true;
+                }
+            }
+            return false;
+        });
+
+        bind.queryRV.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+            }
+
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                visibleItemCount = layoutMgr.getChildCount();
+                totalItemCount = layoutMgr.getItemCount();
+                pastVisibleItems = layoutMgr.findFirstVisibleItemPosition();
+
+                if (dy > 0) {
+                    if (isLoading) {
+                        if (totalItemCount > previousTotal) {
+                            isLoading = false;
+                            previousTotal = totalItemCount;
+                        }
+                    } else {
+                        Log.d(Utils.TAG, "\noffset=" + offset + "\nlimit=" + limit + "\ntotalFound=" + totalFound +
+                                "\npastVisibleItems=" + pastVisibleItems + "\nvisibleItemCount=" + visibleItemCount + "\ntotalItemCount=" + totalItemCount + "\npreviousTotal=" + previousTotal);
+                        if ((totalItemCount - visibleItemCount) <= (pastVisibleItems + viewThreshold)) {
+                            Log.v(Utils.TAG, "Carga 50 más...");
+                            offset += limit;
+                            getQueryResponse();
+                            isLoading = true;
+                        }
+                    }
+                }
+            }
+        });
     }
 
     private void keepSplash() {
@@ -24,4 +130,55 @@ public class SearchActivity extends BaseActivity {
         }
     }
 
+    private RestAPI getRestAPI() {
+        RestSrv restSrv = new RestSrv(URL_BASE, HTTP_TIMEOUT);
+        return restSrv.getRestAPI();
+    }
+
+    private void getQueryResponse() {
+        bind.progressBar.setVisibility(View.VISIBLE);
+        if (restAPI == null) restAPI = getRestAPI();
+        Call<QueryModel> call = restAPI.getItemsByQuery(ID_SITE, query, offset, limit);
+        call.enqueue(new Callback<QueryModel>() {
+            @Override
+            public void onResponse(Call<QueryModel> call, Response<QueryModel> response) {
+                if (response.code() == HTTP_OK) {
+                    call.cancel();
+                    QueryModel body = response.body();
+                    if (body != null) {
+                        if (totalFound == -1) {
+                            totalFound = body.getPaging().getTotal();
+                            bind.infoItemsTV.setText(totalFound + " resultados encontrados");
+                        }
+                        ArrayList<Product> products = body.getProducts();
+                        if (queryAdapter == null) {
+                            queryAdapter = new QueryAdapter(products, SearchActivity.this);
+                            bind.queryRV.setAdapter(queryAdapter);
+                        } else queryAdapter.addProducts(products);
+                    }
+                }
+                bind.progressBar.setVisibility(View.GONE);
+            }
+
+            @Override
+            public void onFailure(Call<QueryModel> call, Throwable t) {
+                Toast.makeText(SearchActivity.this, "Failed", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void clearScreen() {
+        offset = 0;
+        previousTotal = 0;
+        totalFound = -1;
+        bind.infoItemsTV.setText("No hay artículos encontrados");
+        if (queryAdapter != null) queryAdapter.clearData();
+    }
+
+    @Override
+    public void onProductClick(Product product) {
+        Intent intent = new Intent(this, ProductActivity.class);
+        intent.putExtra(KEY_PRODUCT, product);
+        startActivity(intent);
+    }
 }

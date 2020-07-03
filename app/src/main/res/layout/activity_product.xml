@@ -15,7 +15,7 @@
         <ImageView
             android:id="@+id/thumbnailIV"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="200dp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             tools:srcCompat="@tools:sample/avatars" />
@@ -65,32 +65,14 @@
             android:paddingStart="10dp"
             android:text="18% OFF"
             android:textColor="@color/greenLightML"
-            app:layout_constraintBottom_toTopOf="@id/normalityDeliveryCV"
+            app:layout_constraintBottom_toTopOf="@id/normalDeliveryCV"
             app:layout_constraintStart_toEndOf="@id/priceTV"
             app:layout_constraintTop_toBottomOf="@id/originalPriceTV" />
 
-        <androidx.cardview.widget.CardView
-            android:id="@+id/normalityDeliveryCV"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            app:cardBackgroundColor="@color/blueBuyML"
-            app:cardCornerRadius="10dp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/priceTV">
-
-            <TextView
-                android:id="@+id/normalityDeliveryTV"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:paddingStart="5dp"
-                android:paddingTop="2dp"
-                android:paddingEnd="5dp"
-                android:paddingBottom="2dp"
-                android:text="Envío con normalidad"
-                android:textColor="@android:color/white" />
-
-        </androidx.cardview.widget.CardView>
+        <include
+            layout="@layout/normal_delivery"
+            tools:layout_editor_absoluteX="10dp"
+            tools:layout_editor_absoluteY="305dp" />
 
         <TextView
             android:id="@+id/paymentTV"
@@ -100,7 +82,7 @@
             android:text="Pagá en hasta 12 cuotas"
             android:textSize="18sp"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/normalityDeliveryCV" />
+            app:layout_constraintTop_toBottomOf="@id/normalDeliveryCV" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

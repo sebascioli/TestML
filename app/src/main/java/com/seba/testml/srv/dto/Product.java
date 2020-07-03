@@ -202,6 +202,10 @@ public class Product implements Parcelable {
     }
 
     public String getThumbnail() {
+        // Agrego "s" para que sea https
+        if (!thumbnail.substring(0, 5).substring(4).equals("s")) {
+            thumbnail = thumbnail.substring(0, 4) + "s" + thumbnail.substring(4);
+        }
         return thumbnail;
     }
 

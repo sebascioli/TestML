@@ -3,6 +3,8 @@ package com.seba.testml.ui;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -10,6 +12,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -28,6 +31,8 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 import static com.seba.testml.srv.dto.Product.KEY_PRODUCT;
+import static com.seba.testml.utils.Utils.hideKeyboard;
+import static com.seba.testml.utils.Utils.showKeyboard;
 import static java.net.HttpURLConnection.HTTP_OK;
 
 public class SearchActivity extends BaseActivity implements QueryAdapter.OnProductListener {
@@ -36,6 +41,7 @@ public class SearchActivity extends BaseActivity implements QueryAdapter.OnProdu
     private static final int SPLASH_TIME = 1000; // ms
     private static final String URL_BASE = "https://api.mercadolibre.com";
     private static final String ID_SITE = "MLA";
+    final int DRAWABLE_LEFT = 0, DRAWABLE_TOP = 1, DRAWABLE_RIGHT = 2, DRAWABLE_BOTTOM = 3;
     private ActivitySearchBinding bind;
     private LinearLayoutManager layoutMgr;
     private QueryAdapter queryAdapter;
@@ -53,21 +59,31 @@ public class SearchActivity extends BaseActivity implements QueryAdapter.OnProdu
         setTheme(R.style.AppTheme);
         super.onCreate(savedInstanceState);
 
+        getSupportActionBar().hide();
+
         bind = ActivitySearchBinding.inflate(getLayoutInflater());
         setContentView(bind.getRoot());
 
         layoutMgr = new LinearLayoutManager(this);
 
+        bind.resultsRV.setVisibility(View.GONE);
+        bind.emptyRV.setVisibility(View.VISIBLE);
+
         bind.queryRV.setHasFixedSize(true);
         bind.queryRV.setLayoutManager(layoutMgr);
+        bind.queryRV.addItemDecoration(new DividerItemDecoration(bind.queryRV.getContext(), DividerItemDecoration.VERTICAL));
 
         bind.queryTIET.setOnKeyListener((view, keyCode, keyEvent) -> {
             if ((keyEvent.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER)) {
+                hideKeyboard(SearchActivity.this);
+                bind.resultsRV.setVisibility(View.VISIBLE);
+                bind.emptyRV.setVisibility(View.GONE);
                 String queryNew = bind.queryTIET.getText().toString();
-                Toast.makeText(SearchActivity.this, queryNew, Toast.LENGTH_SHORT).show();
+//                Toast.makeText(SearchActivity.this, queryNew, Toast.LENGTH_SHORT).show();
                 if (!queryNew.equals(query)) {
                     query = queryNew;
                     clearScreen();
+                    bind.infoItemsTV.setText(getString(R.string.searching));
                     getQueryResponse();
                 }
                 return true;
@@ -76,12 +92,15 @@ public class SearchActivity extends BaseActivity implements QueryAdapter.OnProdu
         });
 
         bind.queryTIET.setOnTouchListener((view, motionEvent) -> {
-            final int DRAWABLE_LEFT = 0, DRAWABLE_TOP = 1, DRAWABLE_RIGHT = 2, DRAWABLE_BOTTOM = 3;
             if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
                 if (motionEvent.getRawX() >= (bind.queryTIET.getRight() - bind.queryTIET.getCompoundDrawables()[DRAWABLE_RIGHT].getBounds().width())) {
                     bind.queryTIET.getText().clear();
                     query = "";
                     clearScreen();
+                    bind.resultsRV.setVisibility(View.GONE);
+                    bind.emptyRV.setVisibility(View.VISIBLE);
+                    bind.queryTIET.requestFocus();
+                    showKeyboard(SearchActivity.this);
                     return true;
                 }
             }
@@ -120,6 +139,26 @@ public class SearchActivity extends BaseActivity implements QueryAdapter.OnProdu
                 }
             }
         });
+
+        bind.queryTIET.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                if (charSequence.length() != 0) {
+                    bind.queryTIET.getCompoundDrawables()[DRAWABLE_RIGHT].setVisible(true, false);
+                } else {
+                    bind.queryTIET.getCompoundDrawables()[DRAWABLE_RIGHT].setVisible(false, false);
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+            }
+        });
     }
 
     private void keepSplash() {
@@ -148,11 +187,11 @@ public class SearchActivity extends BaseActivity implements QueryAdapter.OnProdu
                     if (body != null) {
                         if (totalFound == -1) {
                             totalFound = body.getPaging().getTotal();
-                            bind.infoItemsTV.setText(totalFound + " resultados encontrados");
+                            bind.infoItemsTV.setText(getResources().getQuantityString(R.plurals.results_found, totalFound, totalFound));
                         }
                         ArrayList<Product> products = body.getProducts();
                         if (queryAdapter == null) {
-                            queryAdapter = new QueryAdapter(products, SearchActivity.this);
+                            queryAdapter = new QueryAdapter(SearchActivity.this, products, SearchActivity.this);
                             bind.queryRV.setAdapter(queryAdapter);
                         } else queryAdapter.addProducts(products);
                     }
@@ -162,7 +201,7 @@ public class SearchActivity extends BaseActivity implements QueryAdapter.OnProdu
 
             @Override
             public void onFailure(Call<QueryModel> call, Throwable t) {
-                Toast.makeText(SearchActivity.this, "Failed", Toast.LENGTH_SHORT).show();
+                Toast.makeText(SearchActivity.this, getString(R.string.search_failed), Toast.LENGTH_LONG).show();
             }
         });
     }
@@ -171,7 +210,7 @@ public class SearchActivity extends BaseActivity implements QueryAdapter.OnProdu
         offset = 0;
         previousTotal = 0;
         totalFound = -1;
-        bind.infoItemsTV.setText("No hay artículos encontrados");
+        bind.infoItemsTV.setText(getString(R.string.no_results));
         if (queryAdapter != null) queryAdapter.clearData();
     }
 

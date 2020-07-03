@@ -11,6 +11,9 @@
     <color name="yellowCanary">#f9c802</color>
     <color name="yellowMustard">#e8b828</color>
     <color name="yellowFlaxen">#d6b75a</color>
+    <color name="gold">#ffd700</color>
+    <color name="goldDark">#b8860b</color>
+    <color name="olive">#808000</color>
     <color name="greenLightML">#39b977</color>
     <color name="greenDarkML">#00a650</color>
     <color name="blueDeliveryML">#3882ef</color>

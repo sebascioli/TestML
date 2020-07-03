@@ -12,7 +12,7 @@
         android:layout_height="wrap_content"
         android:layout_margin="10dp"
         app:cardBackgroundColor="@android:color/white"
-        app:cardCornerRadius="20dp"
+        app:cardCornerRadius="25dp"
         app:contentPadding="10dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -23,7 +23,6 @@
             android:orientation="vertical">
 
             <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/idEntregaTIL"
                 style="@style/Widget.Design.TextInputLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
@@ -32,8 +31,8 @@
                     android:id="@+id/queryTIET"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:drawableRight="@drawable/ic_cancel"
-                    android:hint="Ingrese artículo a buscar..."
+                    android:drawableEnd="@drawable/ic_cancel"
+                    android:hint="@string/input_product"
                     android:inputType="text"
                     android:singleLine="true" />
 
@@ -49,13 +48,15 @@
         android:layout_height="0dp"
         android:layout_margin="10dp"
         app:cardBackgroundColor="@android:color/white"
-        app:cardCornerRadius="20dp"
+        app:cardCornerRadius="25dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/queryCV">
 
         <RelativeLayout
+            android:id="@+id/resultsRV"
+            android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
@@ -65,14 +66,15 @@
                 android:layout_height="wrap_content"
                 android:layout_alignParentTop="true"
                 android:padding="10dp"
-                android:text="No hay artículos encontrados" />
+                android:text="@string/empty_search_results" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/queryRV"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_above="@+id/progressBar"
-                android:layout_below="@id/infoItemsTV" />
+                android:layout_below="@id/infoItemsTV"
+                android:overScrollMode="never" />
 
             <ProgressBar
                 android:id="@+id/progressBar"
@@ -81,24 +83,33 @@
                 android:layout_height="wrap_content"
                 android:layout_alignParentBottom="true"
                 android:layout_centerInParent="true"
+                android:padding="10dp"
                 android:visibility="gone" />
-            <!--            android:indeterminateTint="@color/yellowML"-->
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/emptyRV"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:alpha="0.50"
+            android:background="@drawable/gradient_yellow"
+            android:gravity="center"
+            android:visibility="visible">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:layout_centerInParent="true"
+                android:gravity="center"
+                android:padding="10dp"
+                android:text="¡Nada por aquí!\nParece que aún no ha hecho una búsqueda"
+                android:textColor="@color/gray90"
+                android:textSize="20dp" />
 
         </RelativeLayout>
 
     </androidx.cardview.widget.CardView>
-
-    <TextView
-        android:id="@+id/textView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="activity_search.xml"
-        android:textSize="30dp"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:srcCompat="@drawable/ml_icon" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

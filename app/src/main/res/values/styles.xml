@@ -1,18 +1,20 @@
 <resources>
 
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
-        <item name="android:windowActionBar">false</item>
-        <item name="android:windowNoTitle">true</item>
+        <item name="colorPrimary">@color/yellowButter</item>
+        <item name="colorPrimaryDark">@color/yellowMustard</item>
+        <item name="colorAccent">@color/blueBuyML</item>
         <item name="android:windowBackground">@drawable/gradient_yellow</item>
+        <item name="actionBarTheme">@style/AppTheme.AppBarOverlay</item>
     </style>
 
     <style name="SplashTheme" parent="AppTheme">
-        <!--        <item name="android:windowActionBar">false</item>-->
-        <!--        <item name="android:windowNoTitle">true</item>-->
         <item name="android:windowBackground">@drawable/splash</item>
+    </style>
+
+    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar">
+        <item name="android:textColorPrimary">@color/gray70</item>
+        <item name="android:textColorSecondary">@color/gray60</item>
     </style>
 
 </resources>
